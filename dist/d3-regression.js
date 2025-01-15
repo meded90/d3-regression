@@ -670,6 +670,99 @@
       return powerRegression;
   }
 
+  function sigmoidal() {
+      var x = function (d) { return d[0]; }, y = function (d) { return d[1]; }, domain, maxIter = 2000, alpha = 1e-4; // learning rate
+      function sigmoidalRegression(data) {
+          var n = 0, Xmin = domain ? +domain[0] : Infinity, Xmax = domain ? +domain[1] : -Infinity, Ymin = Infinity, Ymax = -Infinity, sumY = 0;
+          // Gather data & track min/max for domain if not preset
+          visitPoints(data, x, y, function (dx, dy) {
+              n++;
+              sumY += dy;
+              if (!domain) {
+                  if (dx < Xmin)
+                      Xmin = dx;
+                  if (dx > Xmax)
+                      Xmax = dx;
+              }
+              if (dy < Ymin)
+                  Ymin = dy;
+              if (dy > Ymax)
+                  Ymax = dy;
+          });
+          if (!domain && (Xmin === Infinity || Xmax === -Infinity)) {
+              Xmin = 0;
+              Xmax = 1;
+          }
+          // Initialize parameters
+          var A = Ymax - Ymin; // amplitude
+          var B = 1; // logistic slope
+          var C = Ymin; // baseline offset
+          var M = (Xmin + Xmax) / 2; // midpoint
+          // Predict function
+          function f(xx) {
+              return C + A / (1 + Math.exp(-B * (xx - M)));
+          }
+          var _loop_1 = function (iter) {
+              var dA = 0, dB = 0, dC = 0, dM = 0;
+              visitPoints(data, x, y, function (dx, dy) {
+                  var yhat = f(dx);
+                  var err = dy - yhat;
+                  var ex = Math.exp(-B * (dx - M));
+                  var g = 1 / (1 + ex); // logistic
+                  // partial derivatives
+                  var df_dA = g;
+                  var df_dC = 1;
+                  var df_dB = A * g * (1 - g) * (dx - M);
+                  // Note the negative sign for M:
+                  var df_dM = -A * B * g * (1 - g);
+                  var factor = -2 * err;
+                  dA += factor * df_dA;
+                  dB += factor * df_dB;
+                  dC += factor * df_dC;
+                  dM += factor * df_dM;
+              });
+              A -= alpha * (dA / n);
+              B -= alpha * (dB / n);
+              C -= alpha * (dC / n);
+              M -= alpha * (dM / n);
+          };
+          // Gradient Descent
+          for (var iter = 0; iter < maxIter; iter++) {
+              _loop_1();
+          }
+          var predict = function (xx) { return C + A / (1 + Math.exp(-B * (xx - M))); };
+          var out = interpose(Xmin, Xmax, predict);
+          out.A = A;
+          out.B = B;
+          out.C = C;
+          out.M = M;
+          out.predict = predict;
+          // R^2
+          var meanY = sumY / n;
+          out.rSquared = determination(data, x, y, meanY, predict);
+          return out;
+      }
+      sigmoidalRegression.domain = function (arr) {
+          if (!arguments.length)
+              return domain;
+          domain = arr;
+          return sigmoidalRegression;
+      };
+      sigmoidalRegression.x = function (fn) {
+          if (!arguments.length)
+              return x;
+          x = fn;
+          return sigmoidalRegression;
+      };
+      sigmoidalRegression.y = function (fn) {
+          if (!arguments.length)
+              return y;
+          y = fn;
+          return sigmoidalRegression;
+      };
+      return sigmoidalRegression;
+  }
+
   exports.regressionExp = exponential;
   exports.regressionLinear = linear;
   exports.regressionLoess = loess;
@@ -677,6 +770,7 @@
   exports.regressionPoly = polynomial;
   exports.regressionPow = power;
   exports.regressionQuad = quadratic;
+  exports.regressionSigmoidal = sigmoidal;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
