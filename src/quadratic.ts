@@ -3,9 +3,7 @@ import { interpose } from "./utils/interpose";
 import { points, visitPoints } from "./utils/points";
 import { Accessor, DataPoint, PredictFunction, Domain } from "./types";
 
-type QuadraticOutputRoot = [DataPoint, DataPoint];
-
-interface QuadraticOutput extends QuadraticOutputRoot {
+export type QuadraticOutput = [DataPoint, DataPoint] & {
   a: number;
   b: number;
   c: number;
@@ -13,41 +11,36 @@ interface QuadraticOutput extends QuadraticOutputRoot {
   rSquared: number;
 }
 
-type QuadraticRegressionRoot = (data: DataPoint[]) => QuadraticOutput;
 
-interface QuadraticRegression extends QuadraticRegressionRoot {
-  (data: DataPoint[]): QuadraticOutput;
-  
+interface QuadraticRegression<T>  {
+  (data: T[]): QuadraticOutput;
+
   domain(): Domain;
-  
-  domain(domain?: Domain): QuadraticRegression;
-  
-  x(): Accessor;
-  
-  x(x: Accessor): QuadraticRegression;
-  
-  y(): Accessor;
-  
-  y(y: Accessor): QuadraticRegression;
+  domain(domain?: Domain): this;
+
+  x(): Accessor<T>;
+  x(x: Accessor<T>): this;
+
+  y(): Accessor<T>;
+  y(y: Accessor<T>): this;
 }
 
+export default function quadratic<T = DataPoint>(): QuadraticRegression<T> {
+  let x: Accessor<T> = (d: T) => (d as DataPoint)[0],
+      y: Accessor<T> = (d: T) => (d as DataPoint)[1],
+      domain: Domain;
 
-export default function quadratic(): QuadraticRegression {
-  let x: Accessor = d => d[0],
-    y: Accessor = d => d[1],
-    domain: Domain;
-  
-  const quadraticRegression = function quadraticRegression(data: DataPoint[]): QuadraticOutput {
-    const [xv, yv, ux, uy] = points(data, x, y);
+  const quadraticRegression = function quadraticRegression(data: T[]): QuadraticOutput {
+    const [xv, yv, ux, uy] = points(data, (dd) => x(dd), (dd) => y(dd));
     const n = xv.length;
-    
+
     let X2 = 0,
-      X3 = 0,
-      X4 = 0,
-      XY = 0,
-      X2Y = 0,
-      i, dx, dy, x2;
-    
+        X3 = 0,
+        X4 = 0,
+        XY = 0,
+        X2Y = 0,
+        i, dx, dy, x2;
+
     for (i = 0; i < n;) {
       dx = xv[i];
       dy = yv[i++];
@@ -72,7 +65,7 @@ export default function quadratic(): QuadraticRegression {
         if (dx2 > xmax) xmax = dx2;
       }
     });
-    
+
     const X2X2 = X4 - (X2 * X2);
     const d = (X2 * X2X2 - X3 * X3);
     const a = (X2Y * X2 - XY * X3) / d;
@@ -82,7 +75,7 @@ export default function quadratic(): QuadraticRegression {
       const shifted = xx - ux;
       return a * shifted * shifted + b * shifted + c + uy;
     };
-    
+
     const out = interpose(xmin, xmax, fn) as QuadraticOutput;
     out.a = a;
     out.b = b - 2 * a * ux;
@@ -91,25 +84,25 @@ export default function quadratic(): QuadraticRegression {
     out.rSquared = determination(data, x, y, Y, fn);
     
     return out;
-  } as QuadraticRegression;
+  } as QuadraticRegression<T>;
   
   quadraticRegression.domain = function (arr?: Domain) {
     if (!arguments.length) return domain;
     domain = arr;
     return quadraticRegression;
-  } as QuadraticRegression["domain"];
-  
-  quadraticRegression.x = function (fn?: Accessor) {
+  } as QuadraticRegression<T>['domain'];
+
+  quadraticRegression.x = function (fn?: Accessor<T>) {
     if (!arguments.length) return x;
     x = fn!;
     return quadraticRegression;
-  } as QuadraticRegression["x"];
-  
-  quadraticRegression.y = function (fn?: Accessor) {
+  } as QuadraticRegression<T>['x'];
+
+  quadraticRegression.y = function (fn?: Accessor<T>) {
     if (!arguments.length) return y;
     y = fn!;
     return quadraticRegression;
-  } as QuadraticRegression["y"];
-  
+  } as QuadraticRegression<T>['y'];
+
   return quadraticRegression;
 }

@@ -1,20 +1,18 @@
 import { PredictFunction, DataPoint, Accessor, Domain } from "./types";
-type PowerOutputRoot = [DataPoint, DataPoint];
-interface PowerOutput extends PowerOutputRoot {
+export type PowerOutput = [DataPoint, DataPoint] & {
     a: number;
     b: number;
     predict: PredictFunction;
     rSquared: number;
-}
-type PowerRegressionRoot = (data: DataPoint[]) => PowerOutput;
-interface PowerRegression extends PowerRegressionRoot {
-    (data: DataPoint[]): PowerOutput;
+};
+interface PowerRegression<T> {
+    (data: T[]): PowerOutput;
     domain(): Domain;
-    domain(domain?: Domain): PowerRegression;
-    x(): Accessor;
-    x(x: Accessor): PowerRegression;
-    y(): Accessor;
-    y(y: Accessor): PowerRegression;
+    domain(domain?: Domain): this;
+    x(): Accessor<T>;
+    x(x: Accessor<T>): this;
+    y(): Accessor<T>;
+    y(y: Accessor<T>): this;
 }
-export default function power(): PowerRegression;
+export default function power<T = DataPoint>(): PowerRegression<T>;
 export {};

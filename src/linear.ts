@@ -3,35 +3,33 @@ import { ols } from "./utils/ols";
 import { visitPoints } from "./utils/points";
 import { PredictFunction, Accessor, DataPoint, Domain } from "./types";
 
-
-export type LinearOutput =  [DataPoint, DataPoint] & {
+export type LinearOutput = [DataPoint, DataPoint] & {
   a: number;               // slope
   b: number;               // intercept
   predict: PredictFunction
   rSquared: number;
-}
-type  LinearRegressionRoot = (data: DataPoint[]) => LinearOutput
+};
 
 
-export interface LinearRegression extends LinearRegressionRoot {
-  (data: DataPoint[]): LinearOutput;
-  
+export interface LinearRegression<T>  {
+  (data: T[]): LinearOutput;
+
   domain(): Domain;
   domain(arr: Domain): this;
-  
-  x(): Accessor;
-  x(fn: Accessor): this;
-  
-  y(): Accessor;
-  y(fn: Accessor): this;
+
+  x(): Accessor<T>;
+  x(fn: Accessor<T>): this;
+
+  y(): Accessor<T>;
+  y(fn: Accessor<T>): this;
 }
 
-export default function linear():LinearRegression {
-  let x: Accessor = (d) => d[0],
-    y: Accessor = (d) => d[1],
-    domain: Domain;
-  
-  const linearRegression = function (data: DataPoint[]): LinearOutput {
+export default function linear<T = DataPoint>(): LinearRegression<T> {
+  let x: Accessor<T> = (d: T) => (d as DataPoint)[0],
+      y: Accessor<T> = (d: T) => (d as DataPoint)[1],
+      domain: Domain;
+
+  const linearRegression = function (data: T[]): LinearOutput {
     let n = 0,
       X = 0,  // sum of x
       Y = 0,  // sum of y
@@ -46,16 +44,16 @@ export default function linear():LinearRegression {
       Y += (dy - Y) / n;
       XY += (dx * dy - XY) / n;
       X2 += (dx * dx - X2) / n;
-      
+
       if (!domain) {
         if (dx < xmin) xmin = dx;
         if (dx > xmax) xmax = dx;
       }
     });
-    
+
     const [intercept, slope] = ols(X, Y, XY, X2);
     const fn = (xx: number) => slope * xx + intercept;
-    
+
     const out = [[xmin, fn(xmin)], [xmax, fn(xmax)]] as LinearOutput;
     out.a = slope;
     out.b = intercept;
@@ -63,25 +61,25 @@ export default function linear():LinearRegression {
     out.rSquared = determination(data, x, y, Y, fn);
     
     return out;
-  } as LinearRegression
+  } as LinearRegression<T>
   
   linearRegression.domain = function (arr) {
     if (!arguments.length) return domain;
     domain = arr;
     return linearRegression;
-  } as LinearRegression["domain"];
-  
-  linearRegression.x = function (fn?: Accessor) {
+  } as LinearRegression<T>['domain'];
+
+  linearRegression.x = function (fn?: Accessor<T>) {
     if (!arguments.length) return x;
     x = fn!;
     return linearRegression;
-  } as LinearRegression["x"];
-  
-  linearRegression.y = function (fn?: Accessor) {
+  } as LinearRegression<T>['x'];
+
+  linearRegression.y = function (fn?: Accessor<T>) {
     if (!arguments.length) return y;
     y = fn!;
     return linearRegression;
-  } as LinearRegression["y"];
-  
+  } as LinearRegression<T>['y'];
+
   return linearRegression;
 }

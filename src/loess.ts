@@ -13,32 +13,26 @@ import { Accessor, DataPoint } from "./types";
 const maxiters = 2, epsilon = 1e-12;
 
 
-type LoessRegressionRoot = (data: DataPoint[]) => Array<DataPoint>;
+export interface LoessRegression<T>  {
+  (data: T[]):  DataPoint[];
 
-export interface LoessRegression extends LoessRegressionRoot {
-  (data: DataPoint[]): Array<DataPoint>;
-  
   bandwidth(): number;
-  
   bandwidth(bw: number): this;
-  
-  x(): Accessor;
-  
-  x(fn: Accessor): this;
-  
-  y(): Accessor;
-  
-  y(fn: Accessor): this;
+
+  x(): Accessor<T>;
+  x(fn: Accessor<T>): this;
+
+  y(): Accessor<T>;
+  y(fn: Accessor<T>): this;
 }
 
+export default function loess<T = DataPoint>(): LoessRegression<T> {
+  let x: Accessor<T> = (d: T) => (d as DataPoint)[0],
+      y: Accessor<T> = (d: T) => (d as DataPoint)[1],
+      bandwidth = 0.3;
 
-export default function loess(): LoessRegression {
-  let x: Accessor = d => d[0],
-    y: Accessor = d => d[1],
-    bandwidth = .3;
-  
-  const loessRegression = function loessRegression(data: DataPoint[]): Array<DataPoint> {
-    const [xv, yv, ux, uy] = points(data, x, y, true);
+  const loessRegression = function loessRegression(data: T[]): Array<DataPoint> {
+    const [xv, yv, ux, uy] = points(data, (dd) => x(dd), (dd) => y(dd), true);
     const n = xv.length;
     const bw = Math.max(2, ~~(bandwidth * n)); // # of nearest neighbors
     const yhat = new Float64Array(n);
@@ -93,26 +87,26 @@ export default function loess(): LoessRegression {
     }
     
     return output(xv, yhat, ux, uy);
-  } as LoessRegression
+  } as LoessRegression<T>
   
   loessRegression.bandwidth = function (bw?: number) {
     if (!arguments.length) return bandwidth;
     bandwidth = bw!;
     return loessRegression;
-  } as LoessRegression["bandwidth"];
-  
-  loessRegression.x = function (fn?: Accessor) {
+  } as LoessRegression<T>['bandwidth'];
+
+  loessRegression.x = function (fn?: Accessor<T>) {
     if (!arguments.length) return x;
     x = fn!;
     return loessRegression;
-  } as LoessRegression["x"];
-  
-  loessRegression.y = function (fn?: Accessor) {
+  } as LoessRegression<T>['x'];
+
+  loessRegression.y = function (fn?: Accessor<T>) {
     if (!arguments.length) return y;
     y = fn!;
     return loessRegression;
-  } as LoessRegression["y"];
-  
+  } as LoessRegression<T>['y'];
+
   return loessRegression;
 }
 

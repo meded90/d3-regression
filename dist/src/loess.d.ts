@@ -1,13 +1,11 @@
 import { Accessor, DataPoint } from "./types";
-type LoessRegressionRoot = (data: DataPoint[]) => Array<DataPoint>;
-export interface LoessRegression extends LoessRegressionRoot {
-    (data: DataPoint[]): Array<DataPoint>;
+export interface LoessRegression<T> {
+    (data: T[]): DataPoint[];
     bandwidth(): number;
     bandwidth(bw: number): this;
-    x(): Accessor;
-    x(fn: Accessor): this;
-    y(): Accessor;
-    y(fn: Accessor): this;
+    x(): Accessor<T>;
+    x(fn: Accessor<T>): this;
+    y(): Accessor<T>;
+    y(fn: Accessor<T>): this;
 }
-export default function loess(): LoessRegression;
-export {};
+export default function loess<T = DataPoint>(): LoessRegression<T>;

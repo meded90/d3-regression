@@ -13,63 +13,48 @@ import linear from "./linear";
 import quad from "./quadratic";
 import { PredictFunction, Accessor, DataPoint, Domain } from "./types";
 
-
-type PolynomialOutputRoot = [DataPoint, DataPoint]
-
-export type PolynomialOutput = PolynomialOutputRoot & {
+export type PolynomialOutput = [DataPoint, DataPoint] & {
   coefficients: number[];
   predict: PredictFunction;
   rSquared: number;
-}
+};
 
-type PolynomialRegressionRoot = (data: DataPoint[]) => PolynomialOutput;
 
-export interface PolynomialRegression extends PolynomialRegressionRoot {
-  (data: DataPoint[]): PolynomialOutput;
-  
+export interface PolynomialRegression<T>  {
+  (data: T[]): PolynomialOutput;
+
   domain(): Domain;
-  
-  domain(domain?: Domain): PolynomialRegression;
-  
-  x(): Accessor;
-  
-  x(x: Accessor): PolynomialRegression;
-  
-  y(): Accessor;
-  
-  y(y: Accessor): PolynomialRegression;
-  
+  domain(domain?: Domain): this;
+
+  x(): Accessor<T>;
+  x(x: Accessor<T>): this;
+
+  y(): Accessor<T>;
+  y(y: Accessor<T>): this;
+
   order(): number;
-  
-  order(order: number): PolynomialRegression;
+  order(order: number): this;
 }
 
+export default function polynomial<T = DataPoint>(): PolynomialRegression<T> {
+  let x: Accessor<T> = (d: T) => (d as DataPoint)[0],
+      y: Accessor<T> = (d: T) => (d as DataPoint)[1],
+      order = 3,
+      domain: Domain;
 
-export default function polynomial(): PolynomialRegression {
-  let x: Accessor = d => d[0],
-    y: Accessor = d => d[1],
-    order = 3,
-    domain: Domain;
-  
-  const polynomialRegression = function polynomialRegression(data: DataPoint[]): PolynomialOutput {
+  const polynomialRegression = function polynomialRegression(data: T[]): PolynomialOutput {
     // Shortcut for lower-order polynomials:
     if (order === 1) {
-      const o = linear().x(x).y(y).domain(domain)(data);
-      const result = [
-        o[0],
-        o[1],
-      ] as PolynomialOutput;
+      const o = linear<T>().x(x).y(y).domain(domain)(data);
+      const result = [o[0], o[1]] as PolynomialOutput;
       result.coefficients = [o.b, o.a];
       result.predict = o.predict;
       result.rSquared = o.rSquared;
       return result;
     }
     if (order === 2) {
-      const o = quad().x(x).y(y).domain(domain)(data);
-      const result = [
-        o[0],
-        o[1],
-      ] as PolynomialOutput;
+      const o = quad<T>().x(x).y(y).domain(domain)(data);
+      const result = [o[0], o[1]] as PolynomialOutput;
       result.coefficients = [o.c, o.b, o.a];
       result.predict = o.predict;
       result.rSquared = o.rSquared;
@@ -81,7 +66,7 @@ export default function polynomial(): PolynomialRegression {
     const k = order + 1;
     const lhs: number[] = [];
     const rhs: Float64Array[] = [];
-    
+
     let Y = 0,
       n0 = 0,
       xmin = domain ? +domain[0] : Infinity,
@@ -95,7 +80,7 @@ export default function polynomial(): PolynomialRegression {
         if (dx > xmax) xmax = dx;
       }
     });
-    
+
     // Build normal equations
     for (let i = 0; i < k; i++) {
       // LHS
@@ -104,7 +89,7 @@ export default function polynomial(): PolynomialRegression {
         v += Math.pow(xv[l], i) * yv[l];
       }
       lhs.push(v);
-      
+
       // RHS
       const c = new Float64Array(k);
       for (let j = 0; j < k; j++) {
@@ -117,7 +102,7 @@ export default function polynomial(): PolynomialRegression {
       rhs.push(c);
     }
     rhs.push(new Float64Array(lhs));
-    
+
     const coef = gaussianElimination(rhs);
     const fn = (xx: number) => {
       let shifted = xx - ux;
@@ -134,32 +119,32 @@ export default function polynomial(): PolynomialRegression {
     out.rSquared = determination(data, x, y, Y, fn);
     
     return out;
-  } as PolynomialRegression;
+  } as PolynomialRegression<T>;
   
   polynomialRegression.domain = function (arr?: [number, number]) {
     if (!arguments.length) return domain;
     domain = arr;
     return polynomialRegression;
-  } as PolynomialRegression["domain"];
-  
-  polynomialRegression.x = function (fn?: Accessor) {
+  } as PolynomialRegression<T>['domain'];
+
+  polynomialRegression.x = function (fn?: Accessor<T>) {
     if (!arguments.length) return x;
     x = fn!;
     return polynomialRegression;
-  } as PolynomialRegression["x"];
-  
-  polynomialRegression.y = function (fn?: Accessor) {
+  } as PolynomialRegression<T>['x'];
+
+  polynomialRegression.y = function (fn?: Accessor<T>) {
     if (!arguments.length) return y;
     y = fn!;
     return polynomialRegression;
-  } as PolynomialRegression["y"];
-  
+  } as PolynomialRegression<T>['y'];
+
   polynomialRegression.order = function (n?: number) {
     if (!arguments.length) return order;
     order = n!;
     return polynomialRegression;
-  } as PolynomialRegression["order"];
-  
+  } as PolynomialRegression<T>['order'];
+
   return polynomialRegression;
 }
 
@@ -183,7 +168,7 @@ function uncenter(k: number, a: number[], x: number, y: number): number[] {
 function gaussianElimination(matrix: Float64Array[]): number[] {
   const n = matrix.length - 1;
   const coef = new Array<number>(n);
-  
+
   for (let i = 0; i < n; i++) {
     let r = i;
     // find pivot row

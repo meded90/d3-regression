@@ -5,15 +5,13 @@ export type LinearOutput = [DataPoint, DataPoint] & {
     predict: PredictFunction;
     rSquared: number;
 };
-type LinearRegressionRoot = (data: DataPoint[]) => LinearOutput;
-export interface LinearRegression extends LinearRegressionRoot {
-    (data: DataPoint[]): LinearOutput;
+export interface LinearRegression<T> {
+    (data: T[]): LinearOutput;
     domain(): Domain;
     domain(arr: Domain): this;
-    x(): Accessor;
-    x(fn: Accessor): this;
-    y(): Accessor;
-    y(fn: Accessor): this;
+    x(): Accessor<T>;
+    x(fn: Accessor<T>): this;
+    y(): Accessor<T>;
+    y(fn: Accessor<T>): this;
 }
-export default function linear(): LinearRegression;
-export {};
+export default function linear<T = DataPoint>(): LinearRegression<T>;

@@ -130,7 +130,7 @@ function ols(uX, uY, uXY, uX2) {
 }
 
 function exponential() {
-    var x = function (d) { return d[0]; }, y = function (d) { return d[1]; }, domain;
+    var y = function (d) { return d[1]; }, x = function (d) { return d[0]; }, domain;
     var exponentialRegression = function (data) {
         var n = 0, Y = 0, YL = 0, XY = 0, XYL = 0, X2Y = 0, xmin = domain ? +domain[0] : Infinity, xmax = domain ? +domain[1] : -Infinity;
         visitPoints(data, x, y, function (dx, dy) {
@@ -242,9 +242,9 @@ function median(arr) {
 // Adapted from science.js by Jason Davies
 var maxiters = 2, epsilon = 1e-12;
 function loess() {
-    var x = function (d) { return d[0]; }, y = function (d) { return d[1]; }, bandwidth = .3;
+    var x = function (d) { return d[0]; }, y = function (d) { return d[1]; }, bandwidth = 0.3;
     var loessRegression = function loessRegression(data) {
-        var _a = points(data, x, y, true), xv = _a[0], yv = _a[1], ux = _a[2], uy = _a[3];
+        var _a = points(data, function (dd) { return x(dd); }, function (dd) { return y(dd); }, true), xv = _a[0], yv = _a[1], ux = _a[2], uy = _a[3];
         var n = xv.length;
         var bw = Math.max(2, ~~(bandwidth * n)); // # of nearest neighbors
         var yhat = new Float64Array(n);
@@ -353,7 +353,7 @@ function output(xv, yhat, ux, uy) {
 
 function logarithmic() {
     var x = function (d) { return d[0]; }, y = function (d) { return d[1]; }, base = Math.E, domain;
-    var logarithmicRegression = function logarithmicRegression(data) {
+    var logarithmicRegression = function (data) {
         var n = 0, X = 0, Y = 0, XY = 0, X2 = 0, xmin = domain ? +domain[0] : Infinity, xmax = domain ? +domain[1] : -Infinity, lb = Math.log(base);
         visitPoints(data, x, y, function (dx, dy) {
             var lx = Math.log(dx) / lb;
@@ -408,7 +408,7 @@ function logarithmic() {
 function quadratic() {
     var x = function (d) { return d[0]; }, y = function (d) { return d[1]; }, domain;
     var quadraticRegression = function quadraticRegression(data) {
-        var _a = points(data, x, y), xv = _a[0], yv = _a[1], ux = _a[2], uy = _a[3];
+        var _a = points(data, function (dd) { return x(dd); }, function (dd) { return y(dd); }), xv = _a[0], yv = _a[1], ux = _a[2], uy = _a[3];
         var n = xv.length;
         var X2 = 0, X3 = 0, X4 = 0, XY = 0, X2Y = 0, i, dx, dy, x2;
         for (i = 0; i < n;) {
@@ -477,10 +477,7 @@ function polynomial() {
         // Shortcut for lower-order polynomials:
         if (order === 1) {
             var o = linear().x(x).y(y).domain(domain)(data);
-            var result = [
-                o[0],
-                o[1],
-            ];
+            var result = [o[0], o[1]];
             result.coefficients = [o.b, o.a];
             result.predict = o.predict;
             result.rSquared = o.rSquared;
@@ -488,10 +485,7 @@ function polynomial() {
         }
         if (order === 2) {
             var o = quadratic().x(x).y(y).domain(domain)(data);
-            var result = [
-                o[0],
-                o[1],
-            ];
+            var result = [o[0], o[1]];
             result.coefficients = [o.c, o.b, o.a];
             result.predict = o.predict;
             result.rSquared = o.rSquared;

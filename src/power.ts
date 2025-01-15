@@ -4,34 +4,33 @@ import { ols } from "./utils/ols";
 import { visitPoints } from "./utils/points";
 import { PredictFunction, DataPoint, Accessor, Domain } from "./types";
 
-type PowerOutputRoot = [DataPoint, DataPoint];
-
-interface PowerOutput extends PowerOutputRoot {
+export type PowerOutput = [DataPoint, DataPoint] & {
   a: number;
   b: number;
   predict: PredictFunction;
   rSquared: number;
 }
 
-type PowerRegressionRoot = (data: DataPoint[]) => PowerOutput;
-interface PowerRegression extends PowerRegressionRoot{
-  (data: DataPoint[]): PowerOutput;
+
+interface PowerRegression<T>  {
+  (data: T[]): PowerOutput;
+
   domain(): Domain;
-  domain(domain?: Domain): PowerRegression;
-  
-  x(): Accessor;
-  x(x: Accessor): PowerRegression;
-  
-  y(): Accessor;
-  y(y: Accessor): PowerRegression;
+  domain(domain?: Domain): this;
+
+  x(): Accessor<T>;
+  x(x: Accessor<T>): this;
+
+  y(): Accessor<T>;
+  y(y: Accessor<T>): this;
 }
 
-export default function power(): PowerRegression {
-  let x: Accessor = d => d[0],
-      y: Accessor = d => d[1],
+export default function power<T = DataPoint>(): PowerRegression<T> {
+  let x: Accessor<T> = (d: T) => (d as DataPoint)[0],
+      y: Accessor<T> = (d: T) => (d as DataPoint)[1],
       domain: Domain;
-  
-  const powerRegression =function powerRegression(data: DataPoint[]): PowerOutput {
+
+  const powerRegression = function powerRegression(data: T[]): PowerOutput {
     let n = 0,
         X = 0,
         Y = 0,
@@ -69,25 +68,25 @@ export default function power(): PowerRegression {
     out.rSquared = determination(data, x, y, YS, fn);
 
     return out;
-  } as PowerRegression;
+  } as PowerRegression<T>;
 
   powerRegression.domain = function(arr?: Domain) {
     if (!arguments.length) return domain;
     domain = arr;
     return powerRegression;
-  } as PowerRegression["domain"];
+  } as PowerRegression<T>['domain'];
 
-  powerRegression.x = function(fn?: Accessor) {
+  powerRegression.x = function(fn?: Accessor<T>) {
     if (!arguments.length) return x;
     x = fn!;
     return powerRegression;
-  } as PowerRegression["x"];
+  } as PowerRegression<T>['x'];
 
-  powerRegression.y = function(fn?: Accessor) {
+  powerRegression.y = function(fn?: Accessor<T>) {
     if (!arguments.length) return y;
     y = fn!;
     return powerRegression;
-  } as PowerRegression["y"];
+  } as PowerRegression<T>['y'];
 
   return powerRegression;
 }

@@ -12,27 +12,25 @@ export type ExponentialOutput = [DataPoint, DataPoint] & {
   rSquared: number;
 }
 
-type ExponentialRegressionRoot = (data: DataPoint[]) => ExponentialOutput
-
-export interface ExponentialRegression extends ExponentialRegressionRoot {
-  (data: DataPoint[]): ExponentialOutput;
+export interface ExponentialRegression<T>  {
+  (data: T[]): ExponentialOutput;
   
   domain(): Domain;
   domain(arr: Domain): this;
   
-  x(): Accessor;
-  x(fn: Accessor): this;
+  x(): Accessor<T>;
+  x(fn: Accessor<T>): this;
   
-  y(): Accessor;
-  y(fn: Accessor): this;
+  y(): Accessor<T>;
+  y(fn: Accessor<T>): this;
 }
 
-export default function exponential(): ExponentialRegression {
-  let x: Accessor = d => d[0],
-    y: Accessor = d => d[1],
+export default function exponential<T = DataPoint>(): ExponentialRegression<T> {
+  let y: Accessor<T> = (d: T) => (d as DataPoint)[1],
+    x: Accessor<T> = (d: T) => (d as DataPoint)[0],
     domain: Domain;
   
-  const exponentialRegression = function (data: DataPoint[]): ExponentialOutput {
+  const exponentialRegression = function (data: T[]): ExponentialOutput {
     let n = 0,
       Y = 0,
       YL = 0,
@@ -70,25 +68,25 @@ export default function exponential(): ExponentialRegression {
     out.rSquared = determination(data, x, y, Y, fn);
     
     return out;
-  } as ExponentialRegression;
+  } as ExponentialRegression<T>;
   
   exponentialRegression.domain = function (arr) {
     if (!arguments.length) return domain;
     domain = arr;
     return exponentialRegression;
-  } as ExponentialRegression["domain"];
+  } as ExponentialRegression<T>['domain'];
   
-  exponentialRegression.x = function (fn?: Accessor) {
+  exponentialRegression.x = function (fn?: Accessor<T>) {
     if (!arguments.length) return x;
     x = fn!;
     return exponentialRegression;
-  } as ExponentialRegression["x"];
+  } as ExponentialRegression<T>['x'];
   
-  exponentialRegression.y = function (fn?: Accessor) {
+  exponentialRegression.y = function (fn?: Accessor<T>) {
     if (!arguments.length) return y;
     y = fn!;
     return exponentialRegression;
-  } as ExponentialRegression["y"];
+  } as ExponentialRegression<T>['y'];
   
   return exponentialRegression;
 }

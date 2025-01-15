@@ -1,21 +1,18 @@
 import { PredictFunction, Accessor, DataPoint, Domain } from "./types";
-type PolynomialOutputRoot = [DataPoint, DataPoint];
-export type PolynomialOutput = PolynomialOutputRoot & {
+export type PolynomialOutput = [DataPoint, DataPoint] & {
     coefficients: number[];
     predict: PredictFunction;
     rSquared: number;
 };
-type PolynomialRegressionRoot = (data: DataPoint[]) => PolynomialOutput;
-export interface PolynomialRegression extends PolynomialRegressionRoot {
-    (data: DataPoint[]): PolynomialOutput;
+export interface PolynomialRegression<T> {
+    (data: T[]): PolynomialOutput;
     domain(): Domain;
-    domain(domain?: Domain): PolynomialRegression;
-    x(): Accessor;
-    x(x: Accessor): PolynomialRegression;
-    y(): Accessor;
-    y(y: Accessor): PolynomialRegression;
+    domain(domain?: Domain): this;
+    x(): Accessor<T>;
+    x(x: Accessor<T>): this;
+    y(): Accessor<T>;
+    y(y: Accessor<T>): this;
     order(): number;
-    order(order: number): PolynomialRegression;
+    order(order: number): this;
 }
-export default function polynomial(): PolynomialRegression;
-export {};
+export default function polynomial<T = DataPoint>(): PolynomialRegression<T>;

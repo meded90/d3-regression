@@ -5,38 +5,37 @@ import { visitPoints } from "./utils/points";
 import { PredictFunction, DataPoint, Accessor, Domain } from "./types";
 
 
-type OutputRoot = [DataPoint, DataPoint]
-type LogarithmicOutput = OutputRoot & {
+type LogarithmicOutput = [DataPoint, DataPoint] & {
   a: number;               // slope
   b: number;               // intercept
   predict: PredictFunction
   rSquared: number;
-}
-type LogarithmicRegressionRoot = (data: DataPoint[]) => LogarithmicOutput
+};
 
-export interface LogarithmicRegression extends LogarithmicRegressionRoot {
-  (data: DataPoint[]): LogarithmicOutput;
+
+export interface LogarithmicRegression<T>  {
+  (data: T[]): LogarithmicOutput;
   
   domain(): Domain;
   domain(arr: Domain): this;
   
-  x(): Accessor;
-  x(fn: Accessor): this;
+  x(): Accessor<T>;
+  x(fn: Accessor<T>): this;
   
-  y(): Accessor;
-  y(fn: Accessor): this;
+  y(): Accessor<T>;
+  y(fn: Accessor<T>): this;
   
   base(): number;
   base(b: number): this;
 }
 
-export default function logarithmic(): LogarithmicRegression {
-  let x: Accessor = d => d[0],
-    y: Accessor = d => d[1],
+export default function logarithmic<T = DataPoint>(): LogarithmicRegression<T> {
+  let x: Accessor<T> = (d: T) => (d as DataPoint)[0],
+    y: Accessor<T> = (d: T) => (d as DataPoint)[1],
     base: number = Math.E,
     domain: Domain;
   
-  const logarithmicRegression = function logarithmicRegression(data: DataPoint[]): LogarithmicOutput {
+  const logarithmicRegression = function (data: T[]): LogarithmicOutput {
     let n = 0,
       X = 0,
       Y = 0,
@@ -70,31 +69,31 @@ export default function logarithmic(): LogarithmicRegression {
     out.rSquared = determination(data, x, y, Y, fn);
     
     return out;
-  } as LogarithmicRegression;
+  } as LogarithmicRegression<T>;
   
   logarithmicRegression.domain = function (arr?: [number, number]) {
     if (!arguments.length) return domain;
     domain = arr;
     return logarithmicRegression;
-  } as LogarithmicRegression["domain"];
+  } as LogarithmicRegression<T>['domain'];
   
-  logarithmicRegression.x = function (fn?: Accessor) {
+  logarithmicRegression.x = function (fn?: Accessor<T>) {
     if (!arguments.length) return x;
     x = fn!;
     return logarithmicRegression;
-  } as LogarithmicRegression["x"];
+  } as LogarithmicRegression<T>['x'];
   
-  logarithmicRegression.y = function (fn?: Accessor) {
+  logarithmicRegression.y = function (fn?: Accessor<T>) {
     if (!arguments.length) return y;
     y = fn!;
     return logarithmicRegression;
-  } as LogarithmicRegression["y"];
+  } as LogarithmicRegression<T>['y'];
   
   logarithmicRegression.base = function (b?: number) {
     if (!arguments.length) return base;
     base = b!;
     return logarithmicRegression;
-  } as LogarithmicRegression["base"];
+  } as LogarithmicRegression<T>['base'];
   
   return logarithmicRegression;
 }
