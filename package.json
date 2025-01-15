@@ -25,6 +25,7 @@
   "browser": "dist/d3-regression.js",
   "module": "dist/d3-regression.esm.js",
   "main": "dist/d3-regression.cjs.js",
+  "types": "dist/types/index.d.ts",
   "license": "BSD-3-Clause",
   "bugs": {
     "url": "https://github.com/HarryStevens/d3-regression/issues"
@@ -39,8 +40,9 @@
     "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-typescript2": "^0.35.0",
     "tape": "^4.10.1",
+    "typescript": "^4.9.5",
     "uglify-js": "^2.8.29"
-  },
-  "dependencies": {}
+  }
 }

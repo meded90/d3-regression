@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "ESNext",
+    "declaration": true,
+    "declarationDir": "./dist/types",
+    "outDir": "./dist",
+    "allowJs": true,
+    "strict": true
+  },
+  "include": [
+    "index.ts",
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.js"
+  ]
+}
