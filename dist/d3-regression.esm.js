@@ -466,6 +466,7 @@ function quadratic() {
     return quadraticRegression;
 }
 
+// Adapted from regression-js by Tom Alexander
 function polynomial() {
     var x = function (d) { return d[0]; }, y = function (d) { return d[1]; }, order = 3, domain;
     var polynomialRegression = function polynomialRegression(data) {

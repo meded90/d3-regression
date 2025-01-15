@@ -5,7 +5,8 @@ export type PolynomialOutput = PolynomialOutputRoot & {
     predict: PredictFunction;
     rSquared: number;
 };
-interface PolynomialRegression {
+type PolynomialRegressionRoot = (data: DataPoint[]) => PolynomialOutput;
+export interface PolynomialRegression extends PolynomialRegressionRoot {
     (data: DataPoint[]): PolynomialOutput;
     domain(): Domain;
     domain(domain?: Domain): PolynomialRegression;
